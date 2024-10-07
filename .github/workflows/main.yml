@@ -1,0 +1,58 @@
+name: Zilo-Kernel-Build
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TZ: Asia/Kolkata
+  TOKEN: ${{ secrets.TOKEN }}
+  CHATID: ${{ secrets.CHATID }}
+  FORUMID: ${{ secrets.TOPICID}}
+  KernelVersion: ${{ secrets.KERNELVERSIONNUMBER}}
+  CHANGELOG: '* No Changelog provided by the developer'
+
+jobs:
+  PSM_kernel_CI:
+    runs-on: ubuntu-latest
+    container:
+      image: panchajanya1999/archlinux:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        run: |
+          sudo pacman -Syu --noconfirm wget git openmp zip base-devel \
+          bc \
+          bison \
+          ccache \
+          clang \
+          cpio \
+          cmake \
+          flex \
+          git \
+          libelf \
+          lld \
+          llvm \
+          ninja \
+          openssl \
+          python3 \
+          uboot-tools
+          mkdir -p "$HOME/toolchains/neutron-clang"
+          cd "$HOME/toolchains/neutron-clang"
+          bash <(curl -s "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman") -S=11032023
+
+      - name: Clone PSM Kernel Source
+        run: |
+            cd ~
+            git clone https://github.com/sriramkidambi/zilo-kernel --recursive --depth=1 kernel
+
+      - name: Build Zilo Kernel
+        run: |
+            cd ~/kernel
+            python build.py 	    
